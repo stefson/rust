@@ -105,7 +105,7 @@ def verify(path, sha_path, verbose):
 def unpack(tarball, dst, verbose=False, match=None):
     """Unpack the given tarball file"""
     print("extracting", tarball)
-    fname = os.path.basename(tarball).replace(".tar.gz", "")
+    fname = os.path.basename(tarball).replace(".tar.xz", "")
     with contextlib.closing(tarfile.open(tarball)) as tar:
         for member in tar.getnames():
             if "/" not in member:
@@ -349,12 +349,12 @@ class RustBuild(object):
                  self.program_out_of_date(self.rustc_stamp())):
             if os.path.exists(self.bin_root()):
                 shutil.rmtree(self.bin_root())
-            filename = "rust-std-{}-{}.tar.gz".format(
+            filename = "rust-std-{}-{}.tar.xz".format(
                 rustc_channel, self.build)
             pattern = "rust-std-{}".format(self.build)
             self._download_stage0_helper(filename, pattern)
 
-            filename = "rustc-{}-{}.tar.gz".format(rustc_channel, self.build)
+            filename = "rustc-{}-{}.tar.xz".format(rustc_channel, self.build)
             self._download_stage0_helper(filename, "rustc")
             self.fix_executable("{}/bin/rustc".format(self.bin_root()))
             self.fix_executable("{}/bin/rustdoc".format(self.bin_root()))
@@ -372,7 +372,7 @@ class RustBuild(object):
         if self.cargo().startswith(self.bin_root()) and \
                 (not os.path.exists(self.cargo()) or
                  self.program_out_of_date(self.cargo_stamp())):
-            filename = "cargo-{}-{}.tar.gz".format(cargo_channel, self.build)
+            filename = "cargo-{}-{}.tar.xz".format(cargo_channel, self.build)
             self._download_stage0_helper(filename, "cargo")
             self.fix_executable("{}/bin/cargo".format(self.bin_root()))
             with output(self.cargo_stamp()) as cargo_stamp:
