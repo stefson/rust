@@ -2862,29 +2862,27 @@ impl<T, R, E> InternIteratorElement<T, R> for Result<T, E> {
             -> Self::Output {
         // This code is hot enough that it's worth specializing for the most
         // common length lists, to avoid the overhead of `SmallVec` creation.
-        // The match arms are in order of frequency. The 1, 2, and 0 cases are
-        // typically hit in ~95% of cases. We assume that if the upper and
-        // lower bounds from `size_hint` agree they are correct.
-        Ok(match iter.size_hint() {
-            (1, Some(1)) => {
-                let t0 = iter.next().unwrap()?;
-                assert!(iter.next().is_none());
-                f(&[t0])
-            }
-            (2, Some(2)) => {
-                let t0 = iter.next().unwrap()?;
-                let t1 = iter.next().unwrap()?;
-                assert!(iter.next().is_none());
-                f(&[t0, t1])
-            }
-            (0, Some(0)) => {
-                assert!(iter.next().is_none());
-                f(&[])
-            }
-            _ => {
-                f(&iter.collect::<Result<SmallVec<[_; 8]>, _>>()?)
-            }
-        })
+        // In terms of frequency, lengths 1, 2, and 0 are typically hit in ~95% of cases.
+        let e0 = match iter.next() {
+            Some(x) => x?,
+            None => return Ok(f(&[])),
+        };
+        let e1 = match iter.next() {
+            None => return Ok(f(&[e0])),
+            Some(x) => x?,
+        };
+        let e2 = match iter.next() {
+            None => return Ok(f(&[e0, e1])),
+            Some(x) => x?,
+        };
+        let mut vec: SmallVec<[_; 8]> = SmallVec::with_capacity(3 + iter.size_hint().0);
+        vec.push(e0);
+        vec.push(e1);
+        vec.push(e2);
+        for result in iter {
+            vec.push(result?);
+        }
+        Ok(f(&vec))
     }
 }
 
